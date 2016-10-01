@@ -2,11 +2,9 @@
 use strict;
 use warnings;
 use Test::More;
-use HTTP::Request::Common;
 
-use Catalyst::Test 'App::DynIP';
+plan tests => 1;
 
-my $req = request(GET '/client/update', 'x-auth-token' => 'secret_token');
-ok( $req->is_success, 'Request should succeed' );
+require_ok ('Parallel::ForkManager::Scaled');
 
-done_testing();
+diag( "Testing Parallel::ForkManager::Scaled $Parallel::ForkManager::Scaled::VERSION, Perl $], $^X" );

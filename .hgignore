@@ -1,0 +1,9 @@
+.swp
+blib/
+inc/
+MANIFEST
+META
+MYETA
+Makefile
+.tar.gz
+pm_to_blib

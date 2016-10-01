@@ -3,7 +3,7 @@
 # expected.  You have been warned.
 use inc::Module::Install;
 
-name 'Parallel::ForkManager::Scaled';
+name 'Parallel-ForkManager-Scaled';
 all_from 'lib/Parallel/ForkManager/Scaled.pm';
 
 requires 'Moo';
