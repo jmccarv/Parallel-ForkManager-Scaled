@@ -6,10 +6,15 @@ use inc::Module::Install;
 name 'Parallel-ForkManager-Scaled';
 all_from 'lib/Parallel/ForkManager/Scaled.pm';
 
+requires 'List::Util';
 requires 'Moo';
 requires 'Parallel::ForkManager';
+requires 'Unix::Statgrab';
+requires 'namespace::clean';
+requires 'Test::More';
+
 test_requires 'Test::More' => '0.88';
 
 # install_script glob('script/*.pl');
-#auto_install;
+auto_install;
 WriteAll;
