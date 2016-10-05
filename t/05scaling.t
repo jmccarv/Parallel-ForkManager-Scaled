@@ -44,7 +44,7 @@ ok($pm->soft_max_procs == 13, 'adjusted soft max (2)');
 diag($pm->stats($new));
 $pm->set_max_procs($new);
 
-$pm->_set_stats_pct(PMSTestHelper->new(idle => 10));
+$pm->_set__stats_pct(PMSTestHelper->new(idle => 10));
 
 $new = $pm->adjust_down;
 ok($new == 9, 'adjust down (3)');
@@ -59,12 +59,12 @@ $pm->adjust_soft_max;
 ok($pm->soft_max_procs == 15, 'adjusted soft max (4)');
 diag($pm->stats(0));
 
-$pm->_set_soft_max_procs($pm->hard_max_procs);
+$pm->soft_max_procs($pm->hard_max_procs);
 $pm->adjust_soft_max;
 ok($pm->soft_max_procs == $pm->hard_max_procs, 'adjusted soft max (5)');
 diag($pm->stats(0));
 
-$pm->_set_soft_min_procs($pm->hard_min_procs);
+$pm->soft_min_procs($pm->hard_min_procs);
 $pm->adjust_soft_min;
 ok($pm->soft_min_procs == $pm->hard_min_procs, 'adjusted soft min (4)');
 diag($pm->stats(0));

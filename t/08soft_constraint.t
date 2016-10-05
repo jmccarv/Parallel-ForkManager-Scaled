@@ -20,22 +20,8 @@ my $pm = Parallel::ForkManager::Scaled->new(
 );
 ok(defined $pm, 'constructor');
 
-my $helper = PMSTestHelper->new(idle => 70);
-no warnings;
-*Parallel::ForkManager::Scaled::get_cpu_stats = sub{$helper};
-use warnings;
+$pm->soft_max_procs(22);
+ok($pm->soft_max_procs == 20, 'soft_max_trigger');
 
-diag($pm->stats(0));
-$pm->start or sleep 1, $pm->finish;
-$pm->start or sleep 1, $pm->finish;
-ok($pm->max_procs == 10, 'New procs (1)');
-
-$pm->wait_all_children;
-
-$pm->soft_max_procs(5);
-$pm->set_max_procs(5);
-$helper->idle(20);
-$pm->start or $pm->finish;
-ok($pm->max_procs == 3, 'New procs (2)');
-
-$pm->wait_all_children;
+$pm->soft_min_procs(0);
+ok($pm->soft_min_procs == 1, 'soft_min_trigger');
