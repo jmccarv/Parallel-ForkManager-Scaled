@@ -367,6 +367,17 @@ if a value is returned it will be used to set B<max_procs>.
 Be aware that your returned value will be constrained by 
 B<soft_min_procs> and B<soft_max_procs>.
 
+=item tempdir
+
+This is passed to the Parallel::ForkManager constructor to set
+tempdir. Where Parallel::ForkManager is constructed thusly:
+
+  my $pm = Parallel::ForkManager->new($procs, $tempdir);
+
+The equivalent for this module would be:
+
+  my $pm = Parallel::ForkManager::Scaled->new(initial_procs => $procs, tempdir => $tempdir);
+
 =back
 
 =head2 Methods
@@ -393,6 +404,9 @@ the vlaue B<max_procs> will be used.
 =back
 
 =head3 Methods you probably don't need to use
+
+These are not meant for general consumption but are available anyway.
+Probably best to avoid them :)
 
 =over
 
