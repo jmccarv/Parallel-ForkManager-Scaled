@@ -18,10 +18,10 @@ has idle_target      => ( is => 'rw', default => 0 );
 has idle_threshold   => ( is => 'rw', default => 1 );
 has run_on_update    => ( is => 'rw' );
 
+has _stats_pct   => ( is => 'rwp',  handles => [ qw( idle ) ] );
+has _host_info   => ( is => 'lazy', handles => [ qw( ncpus ) ] );
+has _last_stats  => ( is => 'rw',  default => sub{ get_cpu_stats } );
 has last_update  => ( is => 'rwp', default => sub{ time } );
-has _stats_pct   => ( is => 'rwp', handles => [ qw( idle ) ] );
-has _last_stats  => ( is => 'rw', default => sub{ get_cpu_stats } );
-has _host_info   => ( is => 'lazy' );
 
 #
 # Once Parallel::ForkManager has converted to Moo (in development)
@@ -46,7 +46,7 @@ sub BUILD {
 };
 
 sub _build_hard_min_procs { 1 }
-sub _build_hard_max_procs { (shift->_host_info->ncpus // 1) * 2 }
+sub _build_hard_max_procs { (shift->ncpus // 1) * 2 }
 sub _build_soft_min_procs { shift->hard_min_procs };
 sub _build_soft_max_procs { shift->hard_max_procs };
 sub _build__host_info     { get_host_info }
@@ -394,6 +394,11 @@ Returns the last C<time()> a check/update was performed.
 
 Returns the system's idle percentage as of B<last_update>.
 
+=item B<ncpus>
+
+The number of CPUs detected on the system, this is just
+a wrapper to the cpus function from L<Unix::Statgrab>.
+
 =item B<stats>
 
 Returns a formatted string with information about the
@@ -422,6 +427,33 @@ B<run_on_update> callback to see diagnostics as processes are run:
 C<$pm-E<gt>run_on_update(\&Parallel::ForkManager::Scaled::dump_stats)>
 
 =back
+
+=head1 EXAMPLES
+
+=head2 Maximize CPU usage
+
+see: examples/prun
+
+Run shell commands that are passed into program and try to
+keep the CPU busy, i.e. 0% idle
+
+    use Parallel::ForkManager::Scaled;
+
+    my $pm = Parallel::ForkManager::Scaled->new(
+        run_on_update => \&Parallel::ForkManager::Scaled::dump_stats
+    );
+    
+    # just to be sure we can saturate the CPU
+    $pm->hard_max_procs($pm->ncpus * 4);
+
+    while (<>) {
+        chomp;
+        $pm->start and next;
+
+        # In the child now, run the shell process
+        system $_;
+        $pm->finish;
+    }
 
 =head1 NOTES
 
