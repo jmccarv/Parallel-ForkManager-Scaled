@@ -136,7 +136,7 @@ sub stats {
 
 sub dump_stats {
     my $self = shift;
-    print $self->stats(@_),"\n";
+    print STDERR $self->stats(@_)."\n";
     shift;
 }
 
@@ -421,7 +421,7 @@ This method will force an update of the B<idle> statistic.
 
 =item B<dump_stats>
 
-Print to stdout the string returned by B<stats>, may be used in the
+Print the string returned by B<stats> to STDERR. This may be used in the
 B<run_on_update> callback to see diagnostics as processes are run:
 
 C<$pm-E<gt>run_on_update(\&Parallel::ForkManager::Scaled::dump_stats)>
@@ -430,9 +430,12 @@ C<$pm-E<gt>run_on_update(\&Parallel::ForkManager::Scaled::dump_stats)>
 
 =head1 EXAMPLES
 
+These examples are also provided in the examples/ directory of 
+this distribution.
+
 =head2 Maximize CPU usage
 
-see: examples/prun
+see: examples/prun.pl
 
 Run shell commands that are passed into program and try to
 keep the CPU busy, i.e. 0% idle
@@ -446,12 +449,46 @@ keep the CPU busy, i.e. 0% idle
     # just to be sure we can saturate the CPU
     $pm->hard_max_procs($pm->ncpus * 4);
 
+    $pm->set_waitpid_blocking_sleep(0);
+
     while (<>) {
         chomp;
         $pm->start and next;
 
         # In the child now, run the shell process
         system $_;
+        $pm->finish;
+    }
+
+=head2 Dummy Load
+
+see: examples/dummy_load.pl
+
+This example provides a way to test the capabilities of this module.
+Try chaning the idle_target and other settings to see the effect.
+
+    use Parallel::ForkManager::Scaled;
+
+    my $pm = Parallel::ForkManager::Scaled->new(
+        run_on_update => \&Parallel::ForkManager::Scaled::dump_stats,
+        idle_target => 50,
+    );
+
+    $pm->set_waitpid_blocking_sleep(0);
+
+    for my $i (0..1000) {
+        $pm->start and next;
+
+        my $start = time;
+        srand($$);
+        my $lifespan = 5+int(rand(10));
+
+        # Keep the CPU busy until it's time to exit
+        while (time - $start < $lifespan) { 
+            my $a = time; 
+            my $b = $a^time/3;
+        }
+
         $pm->finish;
     }
 

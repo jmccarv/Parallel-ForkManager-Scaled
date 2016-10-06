@@ -1,35 +1,26 @@
 #!/usr/bin/env perl
 
-use lib '../lib';
 use Parallel::ForkManager::Scaled;
 
 my $pm = Parallel::ForkManager::Scaled->new(
-    #hard_max_procs => 30, 
-    #hard_min_procs => 1,
-    update_frequency => 1,
-    hard_min_procs => 1,
     run_on_update => \&Parallel::ForkManager::Scaled::dump_stats,
-    #idle_target => 10,
+    idle_target => 50,
 );
 
-print " initial: ".$pm->initial_procs."\n";
-print "hard_min: ".$pm->hard_min_procs."\n";
-print "hard_max: ".$pm->hard_max_procs."\n";
-print "     max: ".$pm->max_procs."\n";
-$pm->dump_stats;
-
-sleep 2;
+$pm->set_waitpid_blocking_sleep(0);
 
 for my $i (0..1000) {
     $pm->start and next;
 
-    # busy loop
     my $start = time;
     srand($$);
     my $lifespan = 5+int(rand(10));
+
+    # Keep the CPU busy until it's time to exit
     while (time - $start < $lifespan) { 
         my $a = time; 
         my $b = $a^time/3;
     }
+
     $pm->finish;
 }
