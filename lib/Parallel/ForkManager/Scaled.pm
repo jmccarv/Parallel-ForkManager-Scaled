@@ -136,7 +136,7 @@ sub stats {
 
 sub dump_stats {
     my $self = shift;
-    print $self->stats(@_,"\n");
+    print $self->stats(@_),"\n";
     shift;
 }
 
