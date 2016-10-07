@@ -5,7 +5,7 @@ NAME
 
 VERSION
 
-    Version 0.02
+    Version 0.03
 
 SYNOPSIS
 
@@ -33,7 +33,7 @@ DESCRIPTION
     automatically manage the number of processes running based on how busy
     the system is by watching the CPU idle time. Each time a child is about
     to be start()ed a new value for max_procs may be calculated (if enough
-    time has passed since the last calculation.) If a new value is
+    time has passed since the last calculation). If a new value is
     calculated, the number of processes to run will be adjusted by calling
     set_max_procs with the new value.
 
@@ -42,10 +42,10 @@ DESCRIPTION
 
  Attributes
 
-    Attributes are just methods that may be passed to the constructor and
-    most may be changed during the life of the returned object. They take
-    as a parameter a new value to set for the attribute and return the
-    current value (or new value if one was passed).
+    Attributes are just methods that may be passed to the constructor
+    (new()) and most may be changed during the life of the returned object.
+    They take as a parameter a new value to set for the attribute and
+    return the current value (or new value if one was passed).
 
     hard_min_procs
 
@@ -76,8 +76,8 @@ DESCRIPTION
       Depending on the needs of the system, these values may also diverge
       if necessary to try to reach idle_target.
 
-      You may adjust these values if you wish by passing the method the new
-      value, but you probably shouldn't. :)
+      You may adjust these values if you wish by passing a value to the
+      method but you probably shouldn't. :)
 
     initial_procs (read-only)
 
@@ -89,7 +89,7 @@ DESCRIPTION
     update_frequency
 
       The minimum amount of time, in seconds, that must elapse between
-      checks of the system CPU's business and updates to the number of
+      checks of the system CPU's idle % and updates to the number of
       running processes.
 
       Set this to 0 to cause a check before each call to start().
@@ -110,7 +110,7 @@ DESCRIPTION
 
     idle_threshold
 
-      Only makde adjustments if the current CPU idle is this distance away
+      Only make adjustments if the current CPU idle % is this distance away
       from idle_target. In other words, only adjust if abs(cur_idle -
       idle_target) > idle_threshold. This may be a fractional value
       (floating point).
@@ -139,10 +139,10 @@ DESCRIPTION
       run_on_update expects a coderef which will be called with two
       parameters:
 
-	* The object being adjusted
+	* The object being adjusted.
 
 	* The newly calculated value for max_procs or undef if there was no
-	adjustment to be made
+	adjustment to be made.
 
       The callback must return either a new value for max_procs or undef.
       If the returned value is undef, no change will be made to max_procs.
@@ -210,8 +210,8 @@ EXAMPLES
 
     see: examples/prun.pl
 
-    Run shell commands that are passed into program and try to keep the CPU
-    busy, i.e. 0% idle
+    Run shell commands that are passed into the program and try to keep the
+    CPU busy, i.e. 0% idle
 
         use Parallel::ForkManager::Scaled;
     
@@ -238,7 +238,7 @@ EXAMPLES
     see: examples/dummy_load.pl
 
     This example provides a way to test the capabilities of this module.
-    Try chaning the idle_target and other settings to see the effect.
+    Try changing the idle_target and other settings to see the effect.
 
         use Parallel::ForkManager::Scaled;
     
