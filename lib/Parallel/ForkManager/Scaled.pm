@@ -4,7 +4,7 @@ use namespace::clean;
 use Unix::Statgrab;
 use List::Util qw( min max );
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 extends 'Parallel::ForkManager';
 
@@ -219,7 +219,7 @@ Parallel::ForkManager::Scaled - Run processes in parallel based on CPU usage
 
 =head1 VERSION
 
-Version 0.1
+Version 0.02
 
 =head1 SYNOPSIS
 
