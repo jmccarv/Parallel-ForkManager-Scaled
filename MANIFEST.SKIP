@@ -1,0 +1,4 @@
+^.hg\b
+^.hgignore
+^Makefile$
+^MANIFEST\.
