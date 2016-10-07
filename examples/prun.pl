@@ -9,7 +9,6 @@ my $pm = Parallel::ForkManager::Scaled->new(
 # just to be sure we can saturate the CPU
 $pm->hard_max_procs($pm->ncpus * 4);
 
-# Better for performance
 $pm->set_waitpid_blocking_sleep(0);
 
 while (<>) {

@@ -247,7 +247,7 @@ This module inherits from Parallel::ForkManager and adds the ability
 to automatically manage the number of processes running based on how
 busy the system is by watching the CPU idle time. Each time a child is
 about to be start()ed a new value for B<max_procs> may be calculated
-(if enough time has passed since the last calculation.) If a new value
+(if enough time has passed since the last calculation). If a new value
 is calculated, the number of processes to run will be adjusted by
 calling B<set_max_procs> with the new value.
 
@@ -256,7 +256,7 @@ be set for you (see Attributes below)
 
 =head2 Attributes
 
-Attributes are just methods that may be passed to the constructor and 
+Attributes are just methods that may be passed to the constructor (C<new()>) and 
 most may be changed during the life of the returned object. They take
 as a parameter a new value to set for the attribute and return the current
 value (or new value if one was passed).
@@ -289,7 +289,7 @@ for a consistent workload and a machine not otherwise busy.
 Depending on the needs of the system, these values may also diverge if
 necessary to try to reach B<idle_target>.
 
-You may adjust these values if you wish by passing the method the new value,
+You may adjust these values if you wish by passing a value to the method
 but you probably shouldn't. :)
 
 =item B<initial_procs> (read-only)
@@ -302,7 +302,7 @@ default: half way between hard_min_procs and hard_max_procs
 =item B<update_frequency>
 
 The minimum amount of time, in seconds, that must elapse between checks
-of the system CPU's business and updates to the number of running processes.
+of the system CPU's idle % and updates to the number of running processes.
 
 Set this to 0 to cause a check before each call to C<start()>.
 
@@ -321,7 +321,7 @@ default: 0  # try to keep the CPU 100% busy (0% idle)
 
 =item idle_threshold
 
-Only makde adjustments if the current CPU idle is this distance away from B<idle_target>.
+Only make adjustments if the current CPU idle % is this distance away from B<idle_target>.
 In other words, only adjust if C<abs(B<cur_idle> - B<idle_target>) E<gt> B<idle_threshold>>.
 This may be a fractional value (floating point).
 
@@ -352,11 +352,11 @@ parameters:
 
 =item * 
 
-The object being adjusted
+The object being adjusted.
 
 =item *
 
-The newly calculated value for B<max_procs> or undef if there was no adjustment to be made
+The newly calculated value for B<max_procs> or undef if there was no adjustment to be made.
 
 =back
 
@@ -437,7 +437,7 @@ this distribution.
 
 see: examples/prun.pl
 
-Run shell commands that are passed into program and try to
+Run shell commands that are passed into the program and try to
 keep the CPU busy, i.e. 0% idle
 
     use Parallel::ForkManager::Scaled;
@@ -465,7 +465,7 @@ keep the CPU busy, i.e. 0% idle
 see: examples/dummy_load.pl
 
 This example provides a way to test the capabilities of this module.
-Try chaning the idle_target and other settings to see the effect.
+Try changing the idle_target and other settings to see the effect.
 
     use Parallel::ForkManager::Scaled;
 
