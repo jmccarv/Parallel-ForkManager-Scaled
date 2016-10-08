@@ -4,7 +4,7 @@ use namespace::clean;
 use Unix::Statgrab;
 use List::Util qw( min max );
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 extends 'Parallel::ForkManager';
 
@@ -94,13 +94,10 @@ before start => sub {
     my $min_ok = max(0, $self->idle_target - $self->idle_threshold);
     my $max_ok = min(100, $self->idle_target + $self->idle_threshold);
 
-    #print "idle=".$self->idle." min_ok=$min_ok max_ok=$max_ok\n";
     if ($self->idle >= $max_ok && $self->running_procs >= $self->max_procs) {
-        # idle hands spend time at the genitals
         $new_procs = $self->adjust_up;
 
     } elsif ($self->idle <= $min_ok) {
-        # too busy, back off
         $new_procs = $self->adjust_down;
     }
 
@@ -219,7 +216,7 @@ Parallel::ForkManager::Scaled - Run processes in parallel based on CPU usage
 
 =head1 VERSION
 
-Version 0.04
+Version 0.05
 
 =head1 SYNOPSIS
 
@@ -295,9 +292,9 @@ but you probably shouldn't. :)
 =item B<initial_procs> (read-only)
 
 The number of processes to start running before attempting any adjustments,
-max_procs will be set to this value upon initialization.
+B<max_procs> will be set to this value upon initialization.
 
-default: half way between hard_min_procs and hard_max_procs
+default: half way between B<hard_min_procs> and B<hard_max_procs>
 
 =item B<update_frequency>
 
@@ -319,7 +316,7 @@ processes between B<hard_min_procs> and B<hard_max_procs>
 
 default: 0  # try to keep the CPU 100% busy (0% idle)
 
-=item idle_threshold
+=item B<idle_threshold>
 
 Only make adjustments if the current CPU idle % is this distance away from B<idle_target>.
 In other words, only adjust if C<abs(B<cur_idle> - B<idle_target>) E<gt> B<idle_threshold>>.
@@ -367,7 +364,7 @@ if a value is returned it will be used to set B<max_procs>.
 Be aware that your returned value will be constrained by 
 B<soft_min_procs> and B<soft_max_procs>.
 
-=item tempdir
+=item B<tempdir>
 
 This is passed to the Parallel::ForkManager constructor to set
 tempdir. Where Parallel::ForkManager is constructed thusly:
@@ -403,7 +400,7 @@ a wrapper to the cpus function from L<Unix::Statgrab>.
 
 Returns a formatted string with information about the
 current status. Takes a single parameter, the new
-value for max_procs to be set. If no parameter is passed,
+value for B<max_procs> to be set. If no parameter is passed,
 the vlaue B<max_procs> will be used.
 
 =back
