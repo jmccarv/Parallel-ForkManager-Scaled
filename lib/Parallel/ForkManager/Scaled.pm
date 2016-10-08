@@ -499,11 +499,7 @@ which is probably any system where the libstatgrab library can compile.
 
 =head1 AUTHOR
 
-=over
-
-=item Jason McCarver <slam@parasite.cc>
-
-=back
+Jason McCarver <slam@parasite.cc>
 
 =head1 SEE ALSO
 
