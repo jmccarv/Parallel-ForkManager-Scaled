@@ -11,7 +11,7 @@ requires 'Parallel::ForkManager';
 requires 'Unix::Statgrab';
 requires 'namespace::clean';
 
-repository 'https://jmccarv@bitbucket.org/jmccarv/perl-parallel-forkmanager-scaled';
+repository 'https://bitbucket.org/jmccarv/perl-parallel-forkmanager-scaled';
 
 test_requires 'Test::More';
 
