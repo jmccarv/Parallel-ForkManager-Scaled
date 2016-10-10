@@ -2,7 +2,6 @@
 use strict;
 use warnings;
 use lib 't';
-use PMSTestHelper;
 
 use Test::More;
 
