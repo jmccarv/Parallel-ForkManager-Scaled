@@ -3,3 +3,4 @@
 ^.hgignore
 ^Makefile$
 ^MANIFEST\.
+^MYMETA

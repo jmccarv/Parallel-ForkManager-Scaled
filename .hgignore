@@ -1,7 +1,6 @@
 .swp
 blib/
 inc/
-MANIFEST$
 META
 MYETA
 Makefile
