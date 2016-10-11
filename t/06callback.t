@@ -14,7 +14,7 @@ my $pm = Parallel::ForkManager::Scaled->new(
     hard_min_procs   => 1,
     hard_max_procs   => 5,
     update_frequency => 0,
-    run_on_update    => sub { diag("in callback"); return 4 }
+    run_on_update    => sub { diag("in callback"); shift->set_max_procs(4) }
 );
 ok(defined $pm, 'constructor');
 

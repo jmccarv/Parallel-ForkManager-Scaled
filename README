@@ -5,7 +5,7 @@ NAME
 
 VERSION
 
-    Version 0.08
+    Version 0.10
 
 SYNOPSIS
 
@@ -38,7 +38,7 @@ DESCRIPTION
     set_max_procs with the new value.
 
     Without specifying any attributes to the constructor, some defaults
-    will be set for you (see Attributes below)
+    will be set for you (see Attributes below).
 
  Attributes
 
@@ -132,24 +132,26 @@ DESCRIPTION
     run_on_update
 
       This is a callback function that is run immediately after (possibly)
-      calculating an adjustment, but before setting our max_procs to the
-      new value. This allows you to override the default behavior of this
-      module for your own nefarious purposes.
+      adjusting max_procs. This allows you to override the default behavior
+      of this module for your own nefarious purposes.
 
       run_on_update expects a coderef which will be called with two
       parameters:
 
-	* The object being adjusted.
+	* The object being adjusted. ($obj)
 
-	* The newly calculated value for max_procs or undef if there was no
-	adjustment to be made.
+	* The old value for $obj->max_procs. If you decide you have a
+	better idea of what max_procs should be, in your callback just set
+	it via $obj->set_max_procs($new_value).
 
-      The callback must return either a new value for max_procs or undef.
-      If the returned value is undef, no change will be made to max_procs.
-      Otherwise if a value is returned it will be used to set max_procs.
+      The return value from the callback is ignored.
 
-      Be aware that your returned value will be constrained by
-      soft_min_procs and soft_max_procs.
+      Example:
+
+        $pm->run_on_update( sub{
+            my ($obj, $old_max_procs) = @_;
+            $obj->set_max_procs($old_max_procs+1);
+        });
 
     tempdir
 
@@ -166,6 +168,13 @@ DESCRIPTION
 
     All methods inherited from Parallel::ForkManager plus the following:
 
+    dump_stats
+
+      Print the string returned by stats to STDERR. This may be used as a
+      callback with run_on_update to see diagnostics as processes are run:
+
+        $pm->run_on_update(\&Parallel::ForkManager::Scaled::dump_stats)
+
     last_update
 
       Returns the last time() a check/update was performed.
@@ -179,13 +188,19 @@ DESCRIPTION
       The number of CPUs detected on the system, this is just a wrapper to
       the cpus function from Unix::Statgrab.
 
+    set_max_procs
+
+      This method overrides set_max_procs from Parallel::ForkManager and
+      automatically constrains the new value to be within soft_min_procs
+      and soft_max_procs inclusive.
+
     stats
 
       Returns a formatted string with information about the current status.
-      Takes a single parameter, the new value for max_procs to be set. If
-      no parameter is passed, the vlaue max_procs will be used.
+      Takes a single parameter, the old value for max_procs. If no
+      parameter is passed, the vlaue max_procs will be used.
 
-  Methods you probably don't need to use
+  Method(s) you probably don't need to use
 
     These are not meant for general consumption but are available anyway.
     Probably best to avoid them :)
@@ -193,13 +208,6 @@ DESCRIPTION
     update_stats_pct
 
       This method will force an update of the idle statistic.
-
-    dump_stats
-
-      Print the string returned by stats to STDERR. This may be used in the
-      run_on_update callback to see diagnostics as processes are run:
-
-      $pm->run_on_update(\&Parallel::ForkManager::Scaled::dump_stats)
 
 EXAMPLES
 

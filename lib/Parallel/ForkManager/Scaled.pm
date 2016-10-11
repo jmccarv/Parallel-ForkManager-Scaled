@@ -4,7 +4,7 @@ use namespace::clean;
 use Unix::Statgrab;
 use List::Util qw( min max );
 
-our $VERSION = '0.08';
+our $VERSION = '0.10';
 
 extends 'Parallel::ForkManager';
 
@@ -101,29 +101,34 @@ before start => sub {
         $new_procs = $self->adjust_down;
     }
 
-    if ($self->run_on_update && ref($self->run_on_update) eq 'CODE') {
-        my $p = $self->run_on_update->($self, $new_procs);
-        $new_procs = $p if defined $p;
-    }
+    my $prev_procs = $self->max_procs;
 
-    if ($new_procs) {
-        $new_procs = min($self->soft_max_procs, 
-                     max($self->soft_min_procs, $new_procs));
+    $self->set_max_procs($new_procs) 
+        if $new_procs;
 
-        $self->set_max_procs($new_procs);
-    }
+    $self->run_on_update->($self, $prev_procs)
+        if ($self->run_on_update && ref($self->run_on_update) eq 'CODE');
+};
+
+around set_max_procs => sub {
+    my ($orig, $self, $new_val) = @_;
+
+    $orig->($self,
+        min( $self->soft_max_procs, max($self->soft_min_procs, $new_val)
+        )
+    );
 };
 
 sub stats {
     my $self = shift;
-    my $new_procs = shift // $self->max_procs;
+    my $prev_procs = shift // $self->max_procs;
 
     sprintf(
         "%5.1f id %3d run %3d omax %3d nmax %3d smin %3d smax %3d hmin %3d hmax",
         $self->idle,
         scalar($self->running_procs), 
+        $prev_procs,
         $self->max_procs,
-        $new_procs // -1,
         $self->soft_min_procs,
         $self->soft_max_procs,
         $self->hard_min_procs,
@@ -134,7 +139,6 @@ sub stats {
 sub dump_stats {
     my $self = shift;
     print STDERR $self->stats(@_)."\n";
-    shift;
 }
 
 #
@@ -216,7 +220,7 @@ Parallel::ForkManager::Scaled - Run processes in parallel based on CPU usage
 
 =head1 VERSION
 
-Version 0.08
+Version 0.10
 
 =head1 SYNOPSIS
 
@@ -249,7 +253,7 @@ is calculated, the number of processes to run will be adjusted by
 calling B<set_max_procs> with the new value.
 
 Without specifying any attributes to the constructor, some defaults will
-be set for you (see Attributes below)
+be set for you (see Attributes below).
 
 =head2 Attributes
 
@@ -338,9 +342,8 @@ default: 1
 =item B<run_on_update>
 
 This is a callback function that is run immediately after (possibly) 
-calculating an adjustment, but before setting our B<max_procs> to the 
-new value. This allows you to override the default behavior of this 
-module for your own nefarious purposes.
+adjusting B<max_procs>. This allows you to override the default behavior 
+of this module for your own nefarious purposes.
 
 B<run_on_update> expects a coderef which will be called with two
 parameters:
@@ -349,20 +352,24 @@ parameters:
 
 =item * 
 
-The object being adjusted.
+The object being adjusted. ($obj)
 
 =item *
 
-The newly calculated value for B<max_procs> or undef if there was no adjustment to be made.
+The old value for $obj-E<gt>max_procs. If you decide you have a
+better idea of what max_procs should be, in your callback just
+set it via $obj-E<gt>set_max_procs($new_value).
 
 =back
 
-The callback must return either a new value for B<max_procs> or undef. If the
-returned value is undef, no change will be made to B<max_procs>. Otherwise
-if a value is returned it will be used to set B<max_procs>.
+The return value from the callback is ignored.
 
-Be aware that your returned value will be constrained by 
-B<soft_min_procs> and B<soft_max_procs>.
+Example:
+
+  $pm->run_on_update( sub{
+      my ($obj, $old_max_procs) = @_;
+      $obj->set_max_procs($old_max_procs+1);
+  });
 
 =item B<tempdir>
 
@@ -383,6 +390,13 @@ All methods inherited from L<Parallel::ForkManager> plus the following:
 
 =over
 
+=item B<dump_stats>
+
+Print the string returned by B<stats> to STDERR. This may be used as a
+callback with B<run_on_update> to see diagnostics as processes are run:
+
+  $pm->run_on_update(\&Parallel::ForkManager::Scaled::dump_stats)
+
 =item B<last_update>
 
 Returns the last C<time()> a check/update was performed.
@@ -396,16 +410,22 @@ Returns the system's idle percentage as of B<last_update>.
 The number of CPUs detected on the system, this is just
 a wrapper to the cpus function from L<Unix::Statgrab>.
 
+=item B<set_max_procs>
+
+This method overrides B<set_max_procs> from L<Parallel::ForkManager> and
+automatically constrains the new value to be within B<soft_min_procs> and
+B<soft_max_procs> inclusive.
+
 =item B<stats>
 
 Returns a formatted string with information about the
-current status. Takes a single parameter, the new
-value for B<max_procs> to be set. If no parameter is passed,
+current status. Takes a single parameter, the old
+value for B<max_procs>. If no parameter is passed,
 the vlaue B<max_procs> will be used.
 
 =back
 
-=head3 Methods you probably don't need to use
+=head3 Method(s) you probably don't need to use
 
 These are not meant for general consumption but are available anyway.
 Probably best to avoid them :)
@@ -415,13 +435,6 @@ Probably best to avoid them :)
 =item B<update_stats_pct>
 
 This method will force an update of the B<idle> statistic.
-
-=item B<dump_stats>
-
-Print the string returned by B<stats> to STDERR. This may be used in the
-B<run_on_update> callback to see diagnostics as processes are run:
-
-C<$pm-E<gt>run_on_update(\&Parallel::ForkManager::Scaled::dump_stats)>
 
 =back
 
