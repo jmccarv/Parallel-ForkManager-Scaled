@@ -4,7 +4,7 @@ use namespace::clean;
 use Unix::Statgrab;
 use List::Util qw( min max );
 
-our $VERSION = '0.10';
+our $VERSION = '0.11';
 
 extends 'Parallel::ForkManager';
 
@@ -18,7 +18,7 @@ has idle_target      => ( is => 'rw', default => 0 );
 has idle_threshold   => ( is => 'rw', default => 1 );
 has run_on_update    => ( is => 'rw' );
 
-has _stats_pct   => ( is => 'rwp',  handles => [ qw( idle ) ] );
+has _stats_pct   => ( is => 'rw',  handles => [ qw( idle ) ] );
 has _host_info   => ( is => 'lazy', handles => [ qw( ncpus ) ] );
 has _last_stats  => ( is => 'rw',  default => sub{ get_cpu_stats } );
 has last_update  => ( is => 'rwp', default => sub{ time } );
@@ -74,7 +74,7 @@ sub update_stats_pct {
     my $self = shift;
 
     my $stats = get_cpu_stats;
-    $self->_set__stats_pct($stats->get_cpu_stats_diff($self->_last_stats)->get_cpu_percents);
+    $self->_stats_pct($stats->get_cpu_stats_diff($self->_last_stats)->get_cpu_percents);
 
     $self->_last_stats($stats);
     $self->_set_last_update(time);
@@ -220,7 +220,7 @@ Parallel::ForkManager::Scaled - Run processes in parallel based on CPU usage
 
 =head1 VERSION
 
-Version 0.10
+Version 0.11
 
 =head1 SYNOPSIS
 
