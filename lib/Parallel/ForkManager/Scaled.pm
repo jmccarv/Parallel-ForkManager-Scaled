@@ -4,7 +4,7 @@ use namespace::clean;
 use Unix::Statgrab;
 use List::Util qw( min max );
 
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 extends 'Parallel::ForkManager';
 
@@ -41,7 +41,7 @@ sub FOREIGNBUILDARGS {
 
 sub BUILD {
     my $self = shift;
-    $self->set_max_procs($self->initial_procs);
+    $self->set_max_procs(min($self->soft_max_procs, max($self->soft_min_procs, $self->initial_procs)));
     $self->update_stats_pct;
 };
 
@@ -220,7 +220,7 @@ Parallel::ForkManager::Scaled - Run processes in parallel based on CPU usage
 
 =head1 VERSION
 
-Version 0.11
+Version 0.12
 
 =head1 SYNOPSIS
 
