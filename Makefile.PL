@@ -10,6 +10,7 @@ requires 'Moo';
 requires 'Parallel::ForkManager';
 requires 'Unix::Statgrab';
 requires 'namespace::clean';
+requires 'Storable';
 
 repository 'https://bitbucket.org/jmccarv/perl-parallel-forkmanager-scaled';
 

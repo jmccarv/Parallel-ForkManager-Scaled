@@ -3,8 +3,11 @@ use Moo;
 use namespace::clean;
 use Unix::Statgrab;
 use List::Util qw( min max );
+use Storable qw( freeze thaw );
 
-our $VERSION = '0.12';
+use v5.10;
+
+our $VERSION = '0.13';
 
 extends 'Parallel::ForkManager';
 
@@ -16,12 +19,14 @@ has initial_procs    => ( is => 'lazy' );
 has update_frequency => ( is => 'rw', default => 1 );
 has idle_target      => ( is => 'rw', default => 0 );
 has idle_threshold   => ( is => 'rw', default => 1 );
-has run_on_update    => ( is => 'rw' );
+has run_on_update    => ( is => 'rw', clearer => 1, predicate => 1 );
 
-has _stats_pct   => ( is => 'rw',  handles => [ qw( idle ) ] );
-has _host_info   => ( is => 'lazy', handles => [ qw( ncpus ) ] );
-has _last_stats  => ( is => 'rw',  default => sub{ get_cpu_stats } );
+has _stats_pct   => ( is => 'rw',  clearer => 1, predicate => 1, handles => [ qw( idle ) ] );
+has _host_info   => ( is => 'rw',  clearer => 1, predicate => 1, lazy => 1, builder => 1, handles => [ qw( ncpus ) ] );
+has _last_stats  => ( is => 'rw',  clearer => 1, predicate => 1, default => sub{ get_cpu_stats } );
 has last_update  => ( is => 'rwp', default => sub{ time } );
+
+has __unstorable => ( is => 'ro', init_arg => undef, default => sub{[qw( _stats_pct _host_info _last_stats )]} );
 
 #
 # Once Parallel::ForkManager has converted to Moo (in development)
@@ -51,11 +56,13 @@ sub _build_soft_min_procs { shift->hard_min_procs };
 sub _build_soft_max_procs { shift->hard_max_procs };
 sub _build__host_info     { get_host_info }
 
+# pick a value half way between our soft min and max
 sub _build_initial_procs { 
     my $self = shift;
-    $self->hard_min_procs+int(($self->hard_max_procs-$self->hard_min_procs)/2);
+    $self->hard_min_procs+int(($self->soft_max_procs-$self->soft_min_procs)/2);
 }
 
+# soft min cannot be less than hard min
 sub _trigger_soft_min_procs {
     my ($self, $newval) = @_;
 
@@ -63,6 +70,7 @@ sub _trigger_soft_min_procs {
         if $newval < $self->hard_min_procs;
 }
 
+# soft max cannot exceed hard_max
 sub _trigger_soft_max_procs {
     my ($self, $newval) = @_;
 
@@ -91,7 +99,7 @@ before start => sub {
     $self->update_stats_pct;
 
     my $new_procs;
-    my $min_ok = max(0, $self->idle_target - $self->idle_threshold);
+    my $min_ok = max(  0, $self->idle_target - $self->idle_threshold);
     my $max_ok = min(100, $self->idle_target + $self->idle_threshold);
 
     if ($self->idle >= $max_ok && $self->running_procs >= $self->max_procs) {
@@ -110,6 +118,9 @@ before start => sub {
         if ($self->run_on_update && ref($self->run_on_update) eq 'CODE');
 };
 
+#
+# constrain max_procs to be within our soft min and max
+#
 around set_max_procs => sub {
     my ($orig, $self, $new_val) = @_;
 
@@ -181,6 +192,15 @@ sub adjust_soft_min {
     );
 }
 
+#
+# Adjust our number of running processes (max_procs) to half way between
+# the current number and our soft max. If we're already at
+# soft max, try to adjust the soft max up first.
+#
+# Set the soft min to the current number of running procs
+# as it wasn't enough to hit our idle target so we shouldn't
+# go below it again (although we can if we actually need to).
+#
 sub adjust_up {
     my $self = shift;
     my $cur = $self->max_procs;
@@ -208,6 +228,67 @@ sub adjust_down {
     $min + int(($cur - $min)/2);
 }
 
+
+#
+# libstatgrab doesn't like freeze/thaw (saw assertion errors from vector.c)
+# so we need to set those # attributes that house Unix::Statgrab objects to 
+# undef before # being frozen. Restore them after freezing.
+#
+# Also, freeze/thaw can't handle CODE references so we'll clear
+# our run_on_update hook. There will still be problems with the
+# underlying Parallel::ForkManager hooks but I'm not going to
+# try to fix those here. That should be handled by Parallel::ForkManager
+# I believe.
+#
+sub STORABLE_freeze {
+    my ($self, $cloning) = @_;
+    state $storing = 0;
+    return if $cloning || $storing;
+
+    # libstatgrab isn't happy when it's frozen / thawed
+    my %save;
+    for (@{$self->__unstorable}) {
+        $save{$_} = $self->$_;
+        $self->$_(undef);
+    }
+    $save{run_on_update} = $self->run_on_update;
+    $self->clear_run_on_update;
+
+    $storing = 1;
+    my $ret = freeze($self);
+    $storing = 0;
+
+    $self->$_($save{$_}) for @{$self->__unstorable};
+    $self->run_on_update($save{run_on_update});
+
+    $ret;
+};
+
+#
+# Since our Unix::Statgrab objects are all lazily built, they were
+# set to undef before freeze(). We need to clear them in thaw() so
+# they can be re-built. Not perfect but should keep things working
+#
+# We will have lost the run_on_update hook if it was set, but nothing
+# to be done about that.
+#
+sub STORABLE_thaw {
+    my ($self, $cloning, $data) = @_;
+    state $thawing = 0;
+
+    return if $cloning || $thawing;
+
+    $thawing = 1;
+    %$self = %{thaw($data)};
+
+    eval "\$self->_clear$_" for @{$self->__unstorable};
+
+    # And this non-hidden code ref
+    $self->clear_run_on_update;
+
+    $thawing = 0;
+}
+
 1;
 
 __END__
@@ -220,7 +301,7 @@ Parallel::ForkManager::Scaled - Run processes in parallel based on CPU usage
 
 =head1 VERSION
 
-Version 0.12
+Version 0.13
 
 =head1 SYNOPSIS
 
@@ -298,7 +379,7 @@ but you probably shouldn't. :)
 The number of processes to start running before attempting any adjustments,
 B<max_procs> will be set to this value upon initialization.
 
-default: half way between B<hard_min_procs> and B<hard_max_procs>
+default: half way between B<soft_min_procs> and B<soft_max_procs>
 
 =item B<update_frequency>
 
