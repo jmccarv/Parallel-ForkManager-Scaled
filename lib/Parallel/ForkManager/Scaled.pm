@@ -7,7 +7,7 @@ use Storable qw( freeze thaw );
 
 use v5.10;
 
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 extends 'Parallel::ForkManager';
 
@@ -301,7 +301,7 @@ Parallel::ForkManager::Scaled - Run processes in parallel based on CPU usage
 
 =head1 VERSION
 
-Version 0.13
+Version 0.14
 
 =head1 SYNOPSIS
 
@@ -601,6 +601,16 @@ Jason McCarver <slam@parasite.cc>
 =item L<Unix::Statgrab>
 
 =back
+
+=head1 REPOSITORY
+
+The mercurial repository for this module may be found here:
+
+  https://bitbucket.org/jmccarv/parallel-forkmanager-scaled
+
+You can clone it with
+
+  hg clone https://bitbucket.org/jmccarv/parallel-forkmanager-scaled
 
 =head1 COPYRIGHT AND LICENSE
 

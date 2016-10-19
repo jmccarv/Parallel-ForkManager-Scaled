@@ -5,7 +5,7 @@ NAME
 
 VERSION
 
-    Version 0.13
+    Version 0.14
 
 SYNOPSIS
 
@@ -288,6 +288,16 @@ SEE ALSO
     Parallel::ForkManager
 
     Unix::Statgrab
+
+REPOSITORY
+
+    The mercurial repository for this module may be found here:
+
+      https://bitbucket.org/jmccarv/parallel-forkmanager-scaled
+
+    You can clone it with
+
+      hg clone https://bitbucket.org/jmccarv/parallel-forkmanager-scaled
 
 COPYRIGHT AND LICENSE
 

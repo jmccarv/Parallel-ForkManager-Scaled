@@ -4,6 +4,7 @@ use inc::Module::Install;
 
 name     'Parallel-ForkManager-Scaled';
 all_from 'lib/Parallel/ForkManager/Scaled.pm';
+auto_set_repository;
 
 requires 'List::Util';
 requires 'Moo';
@@ -11,8 +12,6 @@ requires 'Parallel::ForkManager';
 requires 'Unix::Statgrab';
 requires 'namespace::clean';
 requires 'Storable';
-
-repository 'https://bitbucket.org/jmccarv/perl-parallel-forkmanager-scaled';
 
 test_requires 'Test::More';
 
