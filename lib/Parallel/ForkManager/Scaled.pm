@@ -5,9 +5,9 @@ use Unix::Statgrab;
 use List::Util qw( min max );
 use Storable qw( freeze thaw );
 
-use v5.10;
+use 5.010;
 
-our $VERSION = '0.16';
+our $VERSION = '0.17';
 
 extends 'Parallel::ForkManager';
 
@@ -311,7 +311,7 @@ Parallel::ForkManager::Scaled - Run processes in parallel based on CPU usage
 
 =head1 VERSION
 
-Version 0.16
+Version 0.17
 
 =head1 SYNOPSIS
 
