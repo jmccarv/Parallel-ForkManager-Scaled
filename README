@@ -5,7 +5,7 @@ NAME
 
 VERSION
 
-    Version 0.14
+    Version 0.16
 
 SYNOPSIS
 
@@ -177,11 +177,16 @@ DESCRIPTION
 
     last_update
 
-      Returns the last time() a check/update was performed.
+      Returns the last time() stats were updated via update_stats_pct.
 
     idle
 
       Returns the system's idle percentage as of last_update.
+
+      Note that it's possible for idle to be NaN if not enough time has
+      elapsed between the when the object was built and the most recent
+      call to update_stats_pct. Once enough time has elapsed for an idle %
+      to be calculated, idle will never contain an NaN value.
 
     ncpus
 
@@ -207,7 +212,15 @@ DESCRIPTION
 
     update_stats_pct
 
-      This method will force an update of the idle statistic.
+      This method will attempt to update CPU stats (idle, etc). It is
+      automatically called before each child process is start()ed if at
+      least update_frequency seconds has elapsed since the last call.
+
+      If not enough time has elapsed since the last call to
+      update_stats_pct it's possible to get NaN for the new idle stat. In
+      this case no updates will be made.
+
+      If idle is updated, last_update will also be updated with the time.
 
 EXAMPLES
 

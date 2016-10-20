@@ -7,7 +7,7 @@ use Storable qw( freeze thaw );
 
 use v5.10;
 
-our $VERSION = '0.14';
+our $VERSION = '0.16';
 
 extends 'Parallel::ForkManager';
 
@@ -21,10 +21,10 @@ has idle_target      => ( is => 'rw', default => 0 );
 has idle_threshold   => ( is => 'rw', default => 1 );
 has run_on_update    => ( is => 'rw', clearer => 1, predicate => 1 );
 
+has last_update  => ( is => 'rwp', default => sub{ time } );
 has _stats_pct   => ( is => 'rw',  clearer => 1, predicate => 1, handles => [ qw( idle ) ] );
 has _host_info   => ( is => 'rw',  clearer => 1, predicate => 1, lazy => 1, builder => 1, handles => [ qw( ncpus ) ] );
 has _last_stats  => ( is => 'rw',  clearer => 1, predicate => 1, default => sub{ get_cpu_stats } );
-has last_update  => ( is => 'rwp', default => sub{ time } );
 
 has __unstorable => ( is => 'ro', init_arg => undef, default => sub{[qw( _stats_pct _host_info _last_stats )]} );
 
@@ -82,8 +82,13 @@ sub update_stats_pct {
     my $self = shift;
 
     my $stats = get_cpu_stats;
-    $self->_stats_pct($stats->get_cpu_stats_diff($self->_last_stats)->get_cpu_percents);
+    my $pcts  = $stats->get_cpu_stats_diff($self->_last_stats)->get_cpu_percents;
 
+    # Not enough time has elapsed to get a difference, libstatgrab returned NaN
+    # Allow it initially to get _stats_pct set but not after
+    return if $self->_stats_pct && $pcts->idle eq 'NaN';
+
+    $self->_stats_pct($pcts);
     $self->_last_stats($stats);
     $self->_set_last_update(time);
 }
@@ -94,7 +99,7 @@ sub update_stats_pct {
 before start => sub {
     my $self = shift;
  
-    return unless time - $self->last_update >= $self->update_frequency;
+    return if time - $self->last_update < $self->update_frequency;
 
     $self->update_stats_pct;
 
@@ -102,6 +107,11 @@ before start => sub {
     my $min_ok = max(  0, $self->idle_target - $self->idle_threshold);
     my $max_ok = min(100, $self->idle_target + $self->idle_threshold);
 
+    #
+    # It's possible for idle to be NaN if not enough time has elapsed between 
+    # the initial call to update_stats_pct and the latest call. In this case
+    # neither check against $self->idle will be true and no update will occur
+    #
     if ($self->idle >= $max_ok && $self->running_procs >= $self->max_procs) {
         $new_procs = $self->adjust_up;
 
@@ -301,7 +311,7 @@ Parallel::ForkManager::Scaled - Run processes in parallel based on CPU usage
 
 =head1 VERSION
 
-Version 0.14
+Version 0.16
 
 =head1 SYNOPSIS
 
@@ -480,11 +490,16 @@ callback with B<run_on_update> to see diagnostics as processes are run:
 
 =item B<last_update>
 
-Returns the last C<time()> a check/update was performed.
+Returns the last C<time()> stats were updated via B<update_stats_pct>.
 
 =item B<idle>
 
 Returns the system's idle percentage as of B<last_update>.
+
+Note that it's possible for B<idle> to be NaN if not enough time has elapsed
+between the when the object was built and the most recent call to 
+B<update_stats_pct>. Once enough time has elapsed for an idle % to be
+calculated, B<idle> will never contain an NaN value.
 
 =item B<ncpus>
 
@@ -515,7 +530,15 @@ Probably best to avoid them :)
 
 =item B<update_stats_pct>
 
-This method will force an update of the B<idle> statistic.
+This method will attempt to update CPU stats (idle, etc). It is 
+automatically called before each child process is C<start()>ed if
+at least B<update_frequency> seconds has elapsed since the last call.
+
+If not enough time has elapsed since the last call to B<update_stats_pct> it's
+possible to get NaN for the new B<idle> stat. In this case no updates
+will be made.
+
+If B<idle> is updated, B<last_update> will also be updated with the time.
 
 =back
 

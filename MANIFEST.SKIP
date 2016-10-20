@@ -4,3 +4,4 @@
 ^Makefile$
 ^MANIFEST\.
 ^MYMETA
+\.swp$

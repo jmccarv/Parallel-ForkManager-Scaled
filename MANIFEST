@@ -10,6 +10,7 @@ inc/Module/Install/Fetch.pm
 inc/Module/Install/Include.pm
 inc/Module/Install/Makefile.pm
 inc/Module/Install/Metadata.pm
+inc/Module/Install/Repository.pm
 inc/Module/Install/Win32.pm
 inc/Module/Install/WriteAll.pm
 lib/Parallel/ForkManager/Scaled.pm
@@ -26,4 +27,5 @@ t/06callback.t
 t/07start.t
 t/08soft_constraint.t
 t/09storable.t
+t/10update_nan.t
 t/PMSTestHelper.pm
