@@ -241,8 +241,8 @@ sub adjust_down {
 
 #
 # libstatgrab doesn't like freeze/thaw (saw assertion errors from vector.c)
-# so we need to set those # attributes that house Unix::Statgrab objects to 
-# undef before # being frozen. Restore them after freezing.
+# so we need to set those attributes that house Unix::Statgrab objects to 
+# undef before being frozen. Restore them after freezing.
 #
 # Also, freeze/thaw can't handle CODE references so we'll clear
 # our run_on_update hook. There will still be problems with the
