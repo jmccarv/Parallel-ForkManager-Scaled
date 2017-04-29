@@ -7,7 +7,7 @@ use Storable qw( freeze thaw );
 
 use 5.010;
 
-our $VERSION = '0.17';
+our $VERSION = '0.18';
 
 extends 'Parallel::ForkManager';
 
