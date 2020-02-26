@@ -304,13 +304,11 @@ SEE ALSO
 
 REPOSITORY
 
-    The mercurial repository for this module may be found here:
+    The source repository for this module may be found at https://github.com/jmccarv/Parallel-ForkManager-Scaled.git
 
-      https://bitbucket.org/jmccarv/parallel-forkmanager-scaled
+    clone it:
 
-    You can clone it with
-
-      hg clone https://bitbucket.org/jmccarv/parallel-forkmanager-scaled
+      git clone https://github.com/jmccarv/Parallel-ForkManager-Scaled.git
 
 COPYRIGHT AND LICENSE
 
